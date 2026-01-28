@@ -808,6 +808,50 @@ namespace CarSlineAPI.Controllers
             }
         }
 
+        [HttpGet("Trabajo/{trabajoId}")]
+        [ProducesResponseType(typeof(TrabajoSimpleResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> InfoTrabajoSimple(int trabajoId)
+        {
+            try
+            {
+                var trabajo = await _db.TrabajosPorOrden
+                    .Where(t => t.Id == trabajoId && t.Activo)
+                    .Select(t => new
+                    {
+                        t.Trabajo,
+                        Vehiculo = t.OrdenGeneral.Vehiculo
+                    })
+                    .FirstOrDefaultAsync();
+
+                if (trabajo == null)
+                {
+                    return NotFound(new TrabajoSimpleResponse
+                    {
+                        Success = false,
+                        Message = "Trabajo no encontrado"
+                    });
+                }
+
+                return Ok(new TrabajoSimpleResponse
+                {
+                    Success = true,
+                    Message = "Información de trabajo obtenida",
+                    Trabajo = trabajo.Trabajo,
+                    VIN = trabajo.Vehiculo.VIN,
+                    VehiculoCompleto = $"{trabajo.Vehiculo.Marca} {trabajo.Vehiculo.Modelo} {trabajo.Vehiculo.Version} {trabajo.Vehiculo.Anio}"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error al Obtener el Trabajo {trabajoId}");
+                return StatusCode(500, new TrabajoSimpleResponse
+                {
+                    Success = false,
+                    Message = "Error al obtener información del Trabajo"
+                });
+            }
+        }
         /// <summary>
         /// Completar trabajo
         /// PUT api/Trabajos/completar/{trabajoId}

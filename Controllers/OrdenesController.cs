@@ -449,6 +449,17 @@ namespace CarSlineAPI.Controllers
                         Message = $"No se puede entregar. Hay {trabajosPendientes} trabajo(s) sin completar"
                     });
 
+                if (orden.TipoOrdenId != 4 && orden.CostoTotal==0)
+                {
+                    return BadRequest(new
+                    {
+                        Success = false,
+                        Message = $"No se puede entregar. Falta definir los costos de Refacciones y Mano de Obra"
+                    });
+
+
+                }
+
                 orden.EstadoOrdenId = 4; // Entregada
                 orden.FechaEntrega = DateTime.Now;
 

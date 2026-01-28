@@ -263,5 +263,13 @@ namespace CarSlineAPI.Models.DTOs
         public string EstadoTrabajoNombre { get; set; } = string.Empty;
         public DateTime? FechaHoraAsignacionTecnico { get; set; }
     }
+    public class TrabajoSimpleResponse
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; } = string.Empty;
+        public string Trabajo { get; set; } = string.Empty;
+        public string VehiculoCompleto { get; set; } = string.Empty;
+        public string VIN { get; set; } = string.Empty;
 
+    }
 }
