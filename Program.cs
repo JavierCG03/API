@@ -53,8 +53,9 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     )
 );
 
-// Registrar servicios
+
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IPdfService, PdfService>();  
 
 // Configurar CORS para permitir cualquier origen (SOLO PARA DESARROLLO)
 builder.Services.AddCors(options =>
