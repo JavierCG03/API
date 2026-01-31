@@ -1,5 +1,4 @@
 ﻿using CarSlineAPI.Models.DTOs;
-using CarSlineAPI.Models.Entities;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
@@ -15,7 +14,7 @@ namespace CarSlineAPI.Services
     public class PdfService : IPdfService
     {
         private readonly ILogger<PdfService> _logger;
-        private readonly string _rutaBasePdfs = @"C:\Users\LENOVO\Downloads\Evidencias_Ordenes";
+        private readonly string _rutaBasePdfs = @"C:\Users\LENOVO\Downloads\Evidencias_Ordenes\Reportes";
 
         public PdfService(ILogger<PdfService> logger)
         {
@@ -85,7 +84,7 @@ namespace CarSlineAPI.Services
 
                 // Generar y guardar PDF
                 var pdfBytes = await GenerarPdfOrdenAsync(orden);
-                await File.WriteAllBytesAsync(rutaCompleta, pdfBytes);
+                //await File.WriteAllBytesAsync(rutaCompleta, pdfBytes);
 
                 _logger.LogInformation($"✅ PDF guardado en: {rutaCompleta}");
 
@@ -109,7 +108,7 @@ namespace CarSlineAPI.Services
                 column.Item().Row(row =>
                 {
                     var logoPath = Path.Combine(AppContext.BaseDirectory, "Assets", "logo.png");
-                    // Logo/Nombre del Taller
+                    // Logo del Taller
                     row.RelativeItem().Column(col =>
                     {
                         col.Item()
@@ -154,13 +153,8 @@ namespace CarSlineAPI.Services
                 column.Item().Element(c => SeccionClienteVehiculo(c, orden));
                 column.Item().PaddingTop(10);
 
-                //column.Item().PaddingTop(10).PageBreak();
-
                 // Trabajos Realizados
                 column.Item().PaddingTop(15).Element(c => SeccionTrabajos(c, orden));
-
-                // Resumen de Costos
-                column.Item().PaddingTop(15).Element(c => SeccionCostos(c, orden));
 
                 // Observaciones
                 if (!string.IsNullOrWhiteSpace(orden.ObservacionesAsesor) ||
@@ -168,6 +162,10 @@ namespace CarSlineAPI.Services
                 {
                     column.Item().PaddingTop(15).Element(c => SeccionObservaciones(c, orden));
                 }
+
+                // Resumen de Costos
+                column.Item().PaddingTop(15).Element(c => SeccionCostos(c, orden));
+
 
                 // Checklist (si existe)
                 if (orden.CheckList != null)
@@ -304,7 +302,7 @@ namespace CarSlineAPI.Services
                 }
 
                 // Costos del trabajo
-                col.Item().PaddingTop(8).Row(row =>
+                col.Item().PaddingTop(8).EnsureSpace(200).Row(row =>
                 {
                     row.RelativeItem();
                     row.ConstantItem(250).Column(c =>
@@ -341,228 +339,245 @@ namespace CarSlineAPI.Services
     });
 }
 
-private void SeccionCheckList(IContainer container, CheckListPdfDto checkList)
-{
-    container.Column(column =>
-    {
-        column.Item().Background(Colors.Red.Darken2).Padding(8)
-            .Text("CHECKLIST DE SERVICIO").FontSize(13).Bold()
-            .FontColor(Colors.White);
-
-        column.Item().PaddingTop(10).Table(table =>
+        private void SeccionCheckList(IContainer container, CheckListPdfDto checkList)
         {
-            table.ColumnsDefinition(columns =>
+            container.Column(column =>
             {
-                columns.RelativeColumn(2);
-                columns.RelativeColumn(1);
-                columns.RelativeColumn(2);
-                columns.RelativeColumn(1);
-            });
+                column.Item().Background(Colors.Red.Darken2).Padding(8)
+                    .Text("CHECKLIST DE SERVICIO").FontSize(13).Bold()
+                    .FontColor(Colors.White);
 
-            // Sistema de Dirección
-            AgregarSeccionCheckList(table, "SISTEMA DE DIRECCIÓN",
-                ("Bieletas", checkList.Bieletas),
-                ("Terminales", checkList.Terminales),
-                ("Caja Dirección", checkList.CajaDireccion),
-                ("Volante", checkList.Volante));
-
-            // Sistema de Suspensión
-            AgregarSeccionCheckList(table, "SISTEMA DE SUSPENSIÓN",
-                ("Amort. Delanteros", checkList.AmortiguadoresDelanteros),
-                ("Amort. Traseros", checkList.AmortiguadoresTraseros),
-                ("Barra Estabilizadora", checkList.BarraEstabilizadora),
-                ("Horquillas", checkList.Horquillas));
-
-            // Neumáticos
-            AgregarSeccionCheckList(table, "NEUMÁTICOS",
-                ("Delanteros", checkList.NeumaticosDelanteros),
-                ("Traseros", checkList.NeumaticosTraseros),
-                ("Balanceo", checkList.Balanceo),
-                ("Alineación", checkList.Alineacion));
-
-            // Luces
-            AgregarSeccionCheckList(table, "LUCES",
-                ("Altas", checkList.LucesAltas),
-                ("Bajas", checkList.LucesBajas),
-                ("Antiniebla", checkList.LucesAntiniebla),
-                ("Reversa", checkList.LucesReversa),
-                ("Direccionales", checkList.LucesDireccionales),
-                ("Intermitentes", checkList.LucesIntermitentes));
-
-            // Sistema de Frenos
-            AgregarSeccionCheckList(table, "SISTEMA DE FRENOS",
-                ("Discos/Tambores Del.", checkList.DiscosTamboresDelanteros),
-                ("Discos/Tambores Tras.", checkList.DiscosTamboresTraseros),
-                ("Balatas Delanteras", checkList.BalatasDelanteras),
-                ("Balatas Traseras", checkList.BalatasTraseras));
-        });
-
-        // Piezas Reemplazadas y Trabajos
-        column.Item().PaddingTop(10).Row(row =>
-        {
-            row.RelativeItem().Border(1).BorderColor(Colors.Grey.Lighten2)
-                .Padding(8).Column(col =>
+                column.Item().PaddingTop(10).Table(table =>
                 {
-                    col.Item().Text("PIEZAS REEMPLAZADAS").FontSize(10).Bold();
-                    AgregarCheckItem(col, "Aceite de Motor", checkList.ReemplazoAceiteMotor);
-                    AgregarCheckItem(col, "Filtro Aceite", checkList.ReemplazoFiltroAceite);
-                    AgregarCheckItem(col, "Filtro Aire Motor", checkList.ReemplazoFiltroAireMotor);
-                    AgregarCheckItem(col, "Filtro Aire Polen", checkList.ReemplazoFiltroAirePolen);
+                    table.ColumnsDefinition(columns =>
+                    {
+                        columns.RelativeColumn(2);
+                        columns.RelativeColumn(1);
+                        columns.RelativeColumn(2);
+                        columns.RelativeColumn(1);
+                    });
+
+                    // Sistema de Dirección
+                    AgregarSeccionCheckList(table, "SISTEMA DE DIRECCIÓN",
+                        ("Bieletas", checkList.Bieletas),
+                        ("Terminales", checkList.Terminales),
+                        ("Caja Dirección", checkList.CajaDireccion),
+                        ("Volante", checkList.Volante));
+
+                    // Sistema de Suspensión
+                    AgregarSeccionCheckList(table, "SISTEMA DE SUSPENSIÓN",
+                        ("Amort. Delanteros", checkList.AmortiguadoresDelanteros),
+                        ("Amort. Traseros", checkList.AmortiguadoresTraseros),
+                        ("Barra Estabilizadora", checkList.BarraEstabilizadora),
+                        ("Horquillas", checkList.Horquillas));
+
+                    // Neumáticos
+                    AgregarSeccionCheckList(table, "NEUMÁTICOS",
+                        ("Delanteros", checkList.NeumaticosDelanteros),
+                        ("Traseros", checkList.NeumaticosTraseros),
+                        ("Balanceo", checkList.Balanceo),
+                        ("Alineación", checkList.Alineacion));
+
+                    // Luces
+                    AgregarSeccionCheckList(table, "LUCES",
+                        ("Altas", checkList.LucesAltas),
+                        ("Bajas", checkList.LucesBajas),
+                        ("Antiniebla", checkList.LucesAntiniebla),
+                        ("Reversa", checkList.LucesReversa),
+                        ("Direccionales", checkList.LucesDireccionales),
+                        ("Intermitentes", checkList.LucesIntermitentes));
+
+                    // Sistema de Frenos
+                    AgregarSeccionCheckList(table, "SISTEMA DE FRENOS",
+                        ("Discos/Tambores Del.", checkList.DiscosTamboresDelanteros),
+                        ("Discos/Tambores Tras.", checkList.DiscosTamboresTraseros),
+                        ("Balatas Delanteras", checkList.BalatasDelanteras),
+                        ("Balatas Traseras", checkList.BalatasTraseras));
                 });
 
-            row.ConstantItem(20);
-
-            row.RelativeItem().Border(1).BorderColor(Colors.Grey.Lighten2)
-                .Padding(8).Column(col =>
+                // Piezas Reemplazadas y Trabajos
+                column.Item().PaddingTop(10).Row(row =>
                 {
-                    col.Item().Text("TRABAJOS REALIZADOS").FontSize(10).Bold();
-                    AgregarCheckItem(col, "Descristalización de Discos/Tambores de Freno", checkList.DescristalizacionTamboresDiscos);
-                    AgregarCheckItem(col, "Ajuste de Frenos", checkList.AjusteFrenos);
-                    AgregarCheckItem(col, "Calibración de Presión de Neumaticos", checkList.CalibracionPresionNeumaticos);
-                    AgregarCheckItem(col, "Torque de birlos de rueda", checkList.TorqueNeumaticos);
-                    AgregarCheckItem(col, "Rotación de Neumáticos", checkList.RotacionNeumaticos);
-                });
-        });
-    });
-}
+                    row.RelativeItem().Border(1).BorderColor(Colors.Grey.Lighten2)
+                        .Padding(8).Column(col =>
+                        {
+                            col.Item().Text("PIEZAS REEMPLAZADAS").FontSize(10).Bold();
+                            AgregarCheckItem(col, "Aceite de Motor", checkList.ReemplazoAceiteMotor);
+                            AgregarCheckItem(col, "Filtro Aceite", checkList.ReemplazoFiltroAceite);
+                            AgregarCheckItem(col, "Filtro Aire Motor", checkList.ReemplazoFiltroAireMotor);
+                            AgregarCheckItem(col, "Filtro Aire Polen", checkList.ReemplazoFiltroAirePolen);
+                        });
 
-private void AgregarSeccionCheckList(TableDescriptor table, string titulo,
-    params (string nombre, string valor)[] items)
-{
-    // Header de sección
-    table.Cell().ColumnSpan(4).Background(Colors.Grey.Lighten3)
-        .Padding(5).Text(titulo).FontSize(9).Bold();
+                    row.ConstantItem(20);
 
-    // Items en pares
-    for (int i = 0; i < items.Length; i += 2)
-    {
-        table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2)
-            .Padding(5).Text(items[i].nombre).FontSize(8);
-        table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2)
-            .Padding(5).Text(items[i].valor).FontSize(8).Bold();
-
-        if (i + 1 < items.Length)
-        {
-            table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2)
-                .Padding(5).Text(items[i + 1].nombre).FontSize(8);
-            table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2)
-                .Padding(5).Text(items[i + 1].valor).FontSize(8).Bold();
-        }
-        else
-        {
-            table.Cell().ColumnSpan(2).BorderBottom(1)
-                .BorderColor(Colors.Grey.Lighten2);
-        }
-    }
-}
-
-private void AgregarCheckItem(ColumnDescriptor column, string texto, bool valor)
-{
-    column.Item().PaddingTop(3).Row(row =>
-    {
-        row.ConstantItem(15).Text(valor ? "✓" : "✗")
-            .FontColor(valor ? Colors.Green.Medium : Colors.Red.Medium);
-        row.RelativeItem().Text(texto).FontSize(8);
-    });
-}
-
-private void SeccionCostos(IContainer container, OrdenPdfDto orden)
-{
-    container.Column(column =>
-    {
-        column.Item().AlignRight().Width(300).Border(2)
-            .BorderColor(Colors.Red.Darken2).Padding(15).Column(col =>
-            {
-                col.Item().Text("RESUMEN DE COSTOS").FontSize(12).Bold()
-                            .FontColor(Colors.Red.Darken2).AlignCenter();
-
-                col.Item().PaddingTop(10).LineHorizontal(1)
-                            .LineColor(Colors.Grey.Lighten2);
-
-                col.Item().PaddingTop(10).Row(row =>
-                {
-                    row.RelativeItem().Text("Refacciones:");
-                    row.ConstantItem(100).AlignRight()
-                                .Text($"${orden.TotalRefacciones:N2}").Bold();
-                });
-
-                col.Item().PaddingTop(5).Row(row =>
-                {
-                    row.RelativeItem().Text("Mano de Obra:");
-                    row.ConstantItem(100).AlignRight()
-                                .Text($"${orden.TotalManoObra:N2}").Bold();
-                });
-
-                col.Item().PaddingTop(10).LineHorizontal(2)
-                            .LineColor(Colors.Red.Darken2);
-
-                col.Item().PaddingTop(10).Background(Colors.Red.Darken2)
-                            .Padding(8).Row(row =>
-                {
-                    row.RelativeItem().Text("TOTAL")
-                                .FontSize(13).Bold().FontColor(Colors.White);
-                    row.ConstantItem(100).AlignRight()
-                                .Text($"${orden.CostoTotal:N2}")
-                                .FontSize(14).Bold().FontColor(Colors.White);
+                    row.RelativeItem().Border(1).BorderColor(Colors.Grey.Lighten2)
+                        .Padding(8).Column(col =>
+                        {
+                            col.Item().Text("TRABAJOS REALIZADOS").FontSize(10).Bold();
+                            AgregarCheckItem(col, "Descristalización de Discos/Tambores de Freno", checkList.DescristalizacionTamboresDiscos);
+                            AgregarCheckItem(col, "Ajuste de Frenos", checkList.AjusteFrenos);
+                            AgregarCheckItem(col, "Calibración de Presión de Neumaticos", checkList.CalibracionPresionNeumaticos);
+                            AgregarCheckItem(col, "Torque de birlos de rueda", checkList.TorqueNeumaticos);
+                            AgregarCheckItem(col, "Rotación de Neumáticos", checkList.RotacionNeumaticos);
+                        });
                 });
             });
-    });
-}
-
-private void SeccionObservaciones(IContainer container, OrdenPdfDto orden)
-{
-    container.Column(column =>
-    {
-        if (!string.IsNullOrWhiteSpace(orden.ObservacionesAsesor))
-        {
-            column.Item().Border(1).BorderColor(Colors.Orange.Lighten2)
-                .Padding(10).Column(col =>
-                {
-                    col.Item().Text("OBSERVACIONES DEL ASESOR")
-                                .FontSize(10).Bold().FontColor(Colors.Orange.Darken2);
-                    col.Item().PaddingTop(5).Text(orden.ObservacionesAsesor)
-                                .FontSize(9);
-                });
         }
 
-        if (!string.IsNullOrWhiteSpace(orden.ObservacionesJefeTaller))
+        private void AgregarSeccionCheckList(TableDescriptor table, string titulo,
+            params (string nombre, string valor)[] items)
         {
-            column.Item().PaddingTop(10).Border(1)
-                .BorderColor(Colors.Blue.Lighten2).Padding(10).Column(col =>
+            // Header de sección
+            table.Cell().ColumnSpan(4).Background(Colors.Grey.Lighten3)
+                .Padding(5).Text(titulo).FontSize(9).Bold();
+
+            // Items en pares
+            for (int i = 0; i < items.Length; i += 2)
+            {
+                table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2)
+                    .Padding(5).Text(items[i].nombre).FontSize(8);
+                table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2)
+                    .Padding(5).Text(items[i].valor).FontSize(8).Bold();
+
+                if (i + 1 < items.Length)
                 {
-                    col.Item().Text("OBSERVACIONES DEL JEFE DE TALLER")
-                                .FontSize(10).Bold().FontColor(Colors.Blue.Darken2);
-                    col.Item().PaddingTop(5).Text(orden.ObservacionesJefeTaller)
-                                .FontSize(9);
-                });
+                    table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2)
+                        .Padding(5).Text(items[i + 1].nombre).FontSize(8);
+                    table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2)
+                        .Padding(5).Text(items[i + 1].valor).FontSize(8).Bold();
+                }
+                else
+                {
+                    table.Cell().ColumnSpan(2).BorderBottom(1)
+                        .BorderColor(Colors.Grey.Lighten2);
+                }
+            }
         }
-    });
-}
 
-private void CrearPiePagina(IContainer container, OrdenPdfDto orden)
-{
-    container.AlignBottom().Column(column =>
-    {
-        column.Item().LineHorizontal(1).LineColor(Colors.Grey.Lighten2);
-
-        column.Item().PaddingTop(10).Row(row =>
+        private void AgregarCheckItem(ColumnDescriptor column, string texto, bool valor)
         {
-            row.RelativeItem().Text(txt =>
+            column.Item().PaddingTop(3).Row(row =>
             {
-                txt.Span("Generado: ").FontSize(8);
-                txt.Span(DateTime.Now.ToString("dd/MMM/yyyy HH:mm"))
-                    .FontSize(8).Bold();
+                row.ConstantItem(15).Text(valor ? "✓" : "✗")
+                    .FontColor(valor ? Colors.Green.Medium : Colors.Red.Medium);
+                row.RelativeItem().Text(texto).FontSize(8);
             });
+        }
 
-            row.ConstantItem(100).AlignRight().Text(txt =>
+        private void SeccionCostos(IContainer container, OrdenPdfDto orden)
+        {
+            container.Column(column =>
             {
-                txt.Span("Página ").FontSize(8);
-                txt.CurrentPageNumber().FontSize(8).Bold();
-                txt.Span(" de ").FontSize(8);
-                txt.TotalPages().FontSize(8).Bold();
+                column.Item().AlignRight().Width(300).Border(2).EnsureSpace(300)
+                    .BorderColor(Colors.Red.Darken2).Padding(15).Column(col =>
+                    {
+                        col.Item().Text("RESUMEN DE COSTOS").FontSize(12).Bold()
+                                    .FontColor(Colors.Red.Darken2).AlignCenter();
+
+                        col.Item().PaddingTop(10).LineHorizontal(1)
+                                    .LineColor(Colors.Grey.Lighten2);
+
+                        col.Item().PaddingTop(10).Row(row =>
+                        {
+                            row.RelativeItem().Text("Refacciones:");
+                            row.ConstantItem(100).AlignRight()
+                                        .Text($"${orden.TotalRefacciones:N2}").Bold();
+                        });
+
+                        col.Item().PaddingTop(5).Row(row =>
+                        {
+                            row.RelativeItem().Text("Mano de Obra:");
+                            row.ConstantItem(100).AlignRight()
+                                        .Text($"${orden.TotalManoObra:N2}").Bold();
+                        });
+
+                        col.Item().PaddingTop(5).LineHorizontal(1)
+                                .LineColor(Colors.Black);
+
+                        col.Item().PaddingTop(5).Row(row =>
+                        {
+                            row.RelativeItem().Text("Subtotal:");
+                            row.ConstantItem(100).AlignRight()
+                                        .Text($"${orden.CostoTotal:N2}").Bold();
+                        });
+
+                        col.Item().PaddingTop(5).Row(row =>
+                        {
+                            row.RelativeItem().Text("IVA:");
+                            row.ConstantItem(100).AlignRight()
+                                        .Text($"${orden.CostoTotal * 0.16m :N2}").Bold();
+                        });
+
+                        col.Item().PaddingTop(10).LineHorizontal(2)
+                                    .LineColor(Colors.Red.Darken2);
+
+                        col.Item().PaddingTop(10).Background(Colors.Red.Darken2)
+                                    .Padding(8).Row(row =>
+                        {
+                            row.RelativeItem().Text("TOTAL")
+                                        .FontSize(13).Bold().FontColor(Colors.White);
+                            row.ConstantItem(100).AlignRight()
+                                        .Text($"${orden.CostoTotal_IVA:N2}")
+                                        .FontSize(14).Bold().FontColor(Colors.White);
+                        });
+                    });
             });
-        });
-    });
-}
+        }
+
+        private void SeccionObservaciones(IContainer container, OrdenPdfDto orden)
+        {
+            container.Column(column =>
+            {
+                if (!string.IsNullOrWhiteSpace(orden.ObservacionesAsesor))
+                {
+                    column.Item().Border(1).BorderColor(Colors.Orange.Lighten2)
+                        .Padding(10).Column(col =>
+                        {
+                            col.Item().Text("OBSERVACIONES DEL ASESOR")
+                                        .FontSize(10).Bold().FontColor(Colors.Orange.Darken2);
+                            col.Item().PaddingTop(5).Text(orden.ObservacionesAsesor)
+                                        .FontSize(9);
+                        });
+                }
+
+                if (!string.IsNullOrWhiteSpace(orden.ObservacionesJefeTaller))
+                {
+                    column.Item().PaddingTop(10).Border(1)
+                        .BorderColor(Colors.Blue.Lighten2).Padding(10).Column(col =>
+                        {
+                            col.Item().Text("OBSERVACIONES DEL JEFE DE TALLER")
+                                        .FontSize(10).Bold().FontColor(Colors.Blue.Darken2);
+                            col.Item().PaddingTop(5).Text(orden.ObservacionesJefeTaller)
+                                        .FontSize(9);
+                        });
+                }
+            });
+        }
+
+        private void CrearPiePagina(IContainer container, OrdenPdfDto orden)
+        {
+            container.AlignBottom().Column(column =>
+        {
+            column.Item().LineHorizontal(1).LineColor(Colors.Grey.Lighten2);
+
+                column.Item().PaddingTop(10).Row(row =>
+                {
+                    row.RelativeItem().Text(txt =>
+                    {
+                        txt.Span("Generado: ").FontSize(8);
+                        txt.Span(DateTime.Now.ToString("dd/MMM/yyyy HH:mm"))
+                            .FontSize(8).Bold();
+                    });
+
+                    row.ConstantItem(100).AlignRight().Text(txt =>
+                    {
+                        txt.Span("Página ").FontSize(8);
+                        txt.CurrentPageNumber().FontSize(8).Bold();
+                        txt.Span(" de ").FontSize(8);
+                        txt.TotalPages().FontSize(8).Bold();
+                    });
+                });
+            });
+        }
     }
 }

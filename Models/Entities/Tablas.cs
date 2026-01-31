@@ -208,7 +208,7 @@ namespace CarSlineAPI.Models.Entities
 
         [Required, MaxLength(50)]
         public string NumeroOrden { get; set; } = string.Empty;
-        public int TipoOrdenId { get; set; } // 1=SRV, etc.
+        public int TipoOrdenId { get; set; } // 
         public int ClienteId { get; set; }
         public int VehiculoId { get; set; }
         public int AsesorId { get; set; }
@@ -225,6 +225,8 @@ namespace CarSlineAPI.Models.Entities
         [Column(TypeName = "DECIMAL(10,2)")]
         [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
         public decimal? CostoTotal { get; set; }
+        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+        public decimal CostoTotal_IVA { get; private set; }
         public decimal TiempoTotalHoras { get; set; }
         public int TotalTrabajos { get; set; }
         public int TrabajosCompletados { get; set; }

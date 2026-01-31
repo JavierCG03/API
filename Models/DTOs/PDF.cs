@@ -32,7 +32,7 @@
         public decimal TotalRefacciones { get; set; }
         public decimal TotalManoObra { get; set; }
         public decimal CostoTotal { get; set; }
-
+        public decimal CostoTotal_IVA { get; set; }
         // Observaciones
         public string? ObservacionesAsesor { get; set; }
         public string? ObservacionesJefeTaller { get; set; }

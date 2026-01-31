@@ -65,14 +65,14 @@ namespace CarSlineAPI.Controllers
         /// Generar y guardar PDF de una orden en el servidor
         /// POST api/Pdf/orden/{ordenId}/guardar
         /// </summary>
-        [HttpPost("orden/{ordenId}/guardar")]
+        [HttpPost("orden/{ordenId}/preview")]
         [ProducesResponseType(typeof(PdfPreviewResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GuardarPdfOrden(int ordenId)
         {
             try
             {
-                _logger.LogInformation($"💾 Solicitud de guardar PDF para orden {ordenId}");
+                //_logger.LogInformation($"💾 Solicitud de guardar PDF para orden {ordenId}");
 
                 var ordenDto = await ObtenerDatosOrdenAsync(ordenId);
 
@@ -105,42 +105,6 @@ namespace CarSlineAPI.Controllers
                 });
             }
         }
-/*
-        [HttpGet("orden/{ordenId}/preview")]
-        [ProducesResponseType(typeof(PdfPreviewResponse), StatusCodes.Status200OK)]
-        public async Task<IActionResult> VistaPrevia(int ordenId)
-        {
-            try
-            {
-                var ordenDto = await ObtenerDatosOrdenAsync(ordenId );
-
-
-                if (ordenDto == null)
-                {
-                    return NotFound(new { Message = "Orden no encontrada" });
-                }
-
-                var pdfBytes = await _pdfService.GenerarPdfOrdenAsync(ordenDto);
-
-                return Ok(new PdfPreviewResponse
-                {
-                    Success = true,
-                    PdfBase64 = Convert.ToBase64String(pdfBytes),
-                    NumeroOrden = ordenDto.NumeroOrden,
-                    TamanoBytes = pdfBytes.Length
-                });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"❌ Error en vista previa PDF orden {ordenId}");
-                return StatusCode(500, new PdfPreviewResponse
-                {
-                    Success = false,
-                    Message = $"Error: {ex.Message}"
-                });
-            }
-        }
-*/
 
         private async Task<OrdenPdfDto?> ObtenerDatosOrdenAsync(int ordenId)
         {
@@ -190,7 +154,7 @@ namespace CarSlineAPI.Controllers
                         ? $"{duracion.Value.Hours}h {duracion.Value.Minutes}m"
                         : null,
                     CostoManoObra = trabajo.CostoManoObra,
-                    TotalRefacciones = trabajo.RefaccionesTotal,
+                    TotalRefacciones = trabajo.RefaccionesTotal,              
                     Refacciones = refacciones,
                     ComentariosTecnico = trabajo.ComentariosTecnico
                 });
@@ -269,6 +233,7 @@ namespace CarSlineAPI.Controllers
                 TotalRefacciones = trabajosConRefacciones.Sum(t => t.TotalRefacciones),
                 TotalManoObra = trabajosConRefacciones.Sum(t => t.CostoManoObra),
                 CostoTotal = orden.CostoTotal ?? 0,
+                CostoTotal_IVA = orden.CostoTotal_IVA,
 
                 ObservacionesAsesor = orden.ObservacionesAsesor,
                 ObservacionesJefeTaller = orden.ObservacionesJefe,
