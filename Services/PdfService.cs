@@ -14,7 +14,7 @@ namespace CarSlineAPI.Services
     public class PdfService : IPdfService
     {
         private readonly ILogger<PdfService> _logger;
-        private readonly string _rutaBasePdfs = @"C:\Users\LENOVO\Downloads\Evidencias_Ordenes\Reportes";
+        private readonly string _rutaBasePdfs = @"C:\Users\LENOVO\Downloads\Evidencias_Ordenes\";
 
         public PdfService(ILogger<PdfService> logger)
         {
@@ -72,21 +72,21 @@ namespace CarSlineAPI.Services
             try
             {
                 // Crear carpeta específica para la orden
-                string carpetaOrden = Path.Combine(_rutaBasePdfs, numeroOrden);
-                if (!Directory.Exists(carpetaOrden))
-                {
-                    Directory.CreateDirectory(carpetaOrden);
-                }
+                //string carpetaOrden = Path.Combine(_rutaBasePdfs, numeroOrden);
+                //if (!Directory.Exists(carpetaOrden))
+                //{
+                // Directory.CreateDirectory(carpetaOrden);
+                //}
 
                 // Generar nombre del archivo
-                string nombreArchivo = $"Orden_{numeroOrden}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
-                string rutaCompleta = Path.Combine(carpetaOrden, nombreArchivo);
+                //string nombreArchivo = $"{numeroOrden}/{numeroOrden}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
+                //string rutaCompleta = Path.Combine(carpetaOrden, nombreArchivo);
 
                 // Generar y guardar PDF
                 var pdfBytes = await GenerarPdfOrdenAsync(orden);
                 //await File.WriteAllBytesAsync(rutaCompleta, pdfBytes);
 
-                _logger.LogInformation($"✅ PDF guardado en: {rutaCompleta}");
+                //_logger.LogInformation($"✅ PDF guardado en: {rutaCompleta}");
 
                 return await Task.FromResult(pdfBytes);
             }
@@ -360,22 +360,22 @@ namespace CarSlineAPI.Services
                     // Sistema de Dirección
                     AgregarSeccionCheckList(table, "SISTEMA DE DIRECCIÓN",
                         ("Bieletas", checkList.Bieletas),
-                        ("Terminales", checkList.Terminales),
-                        ("Caja Dirección", checkList.CajaDireccion),
+                        ("Terminales de Direccion ", checkList.Terminales),
+                        ("Caja de Dirección", checkList.CajaDireccion),
                         ("Volante", checkList.Volante));
 
                     // Sistema de Suspensión
                     AgregarSeccionCheckList(table, "SISTEMA DE SUSPENSIÓN",
-                        ("Amort. Delanteros", checkList.AmortiguadoresDelanteros),
-                        ("Amort. Traseros", checkList.AmortiguadoresTraseros),
+                        ("Amortiguadores Delanteros", checkList.AmortiguadoresDelanteros),
                         ("Barra Estabilizadora", checkList.BarraEstabilizadora),
+                        ("Amortiguadores Traseros", checkList.AmortiguadoresTraseros),
                         ("Horquillas", checkList.Horquillas));
 
                     // Neumáticos
                     AgregarSeccionCheckList(table, "NEUMÁTICOS",
                         ("Delanteros", checkList.NeumaticosDelanteros),
-                        ("Traseros", checkList.NeumaticosTraseros),
                         ("Balanceo", checkList.Balanceo),
+                        ("Traseros", checkList.NeumaticosTraseros),
                         ("Alineación", checkList.Alineacion));
 
                     // Luces
@@ -389,9 +389,9 @@ namespace CarSlineAPI.Services
 
                     // Sistema de Frenos
                     AgregarSeccionCheckList(table, "SISTEMA DE FRENOS",
-                        ("Discos/Tambores Del.", checkList.DiscosTamboresDelanteros),
-                        ("Discos/Tambores Tras.", checkList.DiscosTamboresTraseros),
+                        ("Discos/Tambores Delanteros", checkList.DiscosTamboresDelanteros),
                         ("Balatas Delanteras", checkList.BalatasDelanteras),
+                        ("Discos/Tambores Traseros", checkList.DiscosTamboresTraseros),
                         ("Balatas Traseras", checkList.BalatasTraseras));
                 });
 
@@ -401,7 +401,7 @@ namespace CarSlineAPI.Services
                     row.RelativeItem().Border(1).BorderColor(Colors.Grey.Lighten2)
                         .Padding(8).Column(col =>
                         {
-                            col.Item().Text("PIEZAS REEMPLAZADAS").FontSize(10).Bold();
+                            col.Item().Background(Colors.Red.Darken2).Padding(3).Text("PIEZAS REEMPLAZADAS").FontSize(10).Bold().FontColor(Colors.White);
                             AgregarCheckItem(col, "Aceite de Motor", checkList.ReemplazoAceiteMotor);
                             AgregarCheckItem(col, "Filtro Aceite", checkList.ReemplazoFiltroAceite);
                             AgregarCheckItem(col, "Filtro Aire Motor", checkList.ReemplazoFiltroAireMotor);
@@ -413,7 +413,7 @@ namespace CarSlineAPI.Services
                     row.RelativeItem().Border(1).BorderColor(Colors.Grey.Lighten2)
                         .Padding(8).Column(col =>
                         {
-                            col.Item().Text("TRABAJOS REALIZADOS").FontSize(10).Bold();
+                            col.Item().Background(Colors.Red.Darken2).Padding(3).Text("TRABAJOS REALIZADOS").FontSize(10).Bold().FontColor(Colors.White);
                             AgregarCheckItem(col, "Descristalización de Discos/Tambores de Freno", checkList.DescristalizacionTamboresDiscos);
                             AgregarCheckItem(col, "Ajuste de Frenos", checkList.AjusteFrenos);
                             AgregarCheckItem(col, "Calibración de Presión de Neumaticos", checkList.CalibracionPresionNeumaticos);
@@ -428,7 +428,7 @@ namespace CarSlineAPI.Services
             params (string nombre, string valor)[] items)
         {
             // Header de sección
-            table.Cell().ColumnSpan(4).Background(Colors.Grey.Lighten3)
+            table.Cell().ColumnSpan(4).Background(Colors.Grey.Lighten3).PaddingTop(5)
                 .Padding(5).Text(titulo).FontSize(9).Bold();
 
             // Items en pares
